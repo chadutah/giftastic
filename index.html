@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>AJAX Giphy Button Review</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Carrois+Gothic+SC" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+</head>
+
+<body id="wholeThing">
+
+    <div class="jumbotron" id="header">
+        <img id="topImageL" src="https://media.giphy.com/media/nBUW1suj9CZaw/giphy.gif">
+        <img id="topImageR" src="http://payload400.cargocollective.com/1/18/579772/10302904/tumblr_nckhwgVIBT1txp8nwo1_500-1.gif">
+        <h1>For the Love of Space</h1>
+        <h4>Click the buttons to display GIPHYs of your favorite topics in space</h4>
+    </div>
+
+    <form class="form-inline" id="topicSearch">
+        <div class="form-group">
+            <label for="topicInput">Search any topic</label>
+            <input type="text" id="topicInput">
+        </div>
+        <!-- Button triggers show to be added -->
+        <input id="addTopic" type="submit" value="submit">
+    </form>
+
+    <div class="row">
+        <div class="container">
+            <div class="btn-group inline pull-left">
+                <button class="btn btn-primary" id="topic" data-search="cats">Cats</button>
+                <button class="btn btn-primary" id="topic" data-search="dogs">Dogs</button>
+                <button class="btn btn-primary" id="topic" data-search="tacos">Tacos</button>
+                <button class="btn btn-primary" id="topic" data-search="pizza">Pizza</button>
+
+                <div id="myButtons"></div>
+            </div>
+            <!--end of button group -->
+        </div>
+        <!--end of container -->
+    </div>
+    <!--end of row -->
+
+
+    <div class="row">
+        <div class="container">
+            <span>
+                <div id="gifArea"></div>
+            </span>
+        </div>
+        <!--end of container -->
+    </div>
+    <!-- end of row  -->
+
+
+    <script>
+        $(document).ready(function () {
+            //Array for searched topics to be added
+            var topics = [];
+
+            //Function with AJAX call to GIPHY; Q parameterc for API link set to search term, limit 10 results
+            //Create div with respective still and animate image sources with "data-state", "data-still" and "data-animate" attributes
+            function displaytopicShow() {
+
+                var x = $(this).data("search");
+                console.log(x);
+
+                var queryURL = "https://api.giphy.com/v1/gifs/search?q=space+" + x + "&api_key=G77kJ1jZ32HWOpDgM2sfIq1Fwrm2jJBM&limit=10";
+
+                console.log(queryURL);
+
+                $.ajax({
+                    url: queryURL,
+                    method: "GET"
+                }).done(function (response) {
+                    var results = response.data;
+                    console.log(results);
+                    for (var i = 0; i < results.length; i++) {
+
+                        var showDiv = $("<div class='col-md-4'>");
+
+                        var rating = results[i].rating;
+                        var defaultAnimatedSrc = results[i].images.fixed_height.url;
+                        var staticSrc = results[i].images.fixed_height_still.url;
+                        var showImage = $("<img>");
+                        var p = $("<p>").text("Rating: " + rating);
+
+                        showImage.attr("src", staticSrc);
+                        showImage.addClass("topicGiphy");
+                        showImage.attr("data-state", "still");
+                        showImage.attr("data-still", staticSrc);
+                        showImage.attr("data-animate", defaultAnimatedSrc);
+                        showDiv.append(p);
+                        showDiv.append(showImage);
+                        $("#gifArea").prepend(showDiv);
+
+                    }
+                });
+            }
+
+            //Submit button click event takes search term from form input, trims and pushes to topics array, displays button
+            $("#addTopic").on("click", function (event) {
+                event.preventDefault();
+                var newTopic = $("#topicInput").val().trim();
+                topics.push(newTopic);
+                console.log(topics);
+                $("#topicInput").val('');
+                displayButtons();
+            });
+
+            //Function iterates through topics array to display button with array values in "myButtons" section of HTML
+            function displayButtons() {
+                $("#myButtons").empty();
+                for (var i = 0; i < topics.length; i++) {
+                    var a = $('<button class="btn btn-primary">');
+                    a.attr("id", "topic");
+                    a.attr("data-search", topics[i]);
+                    a.text(topics[i]);
+                    $("#myButtons").append(a);
+                }
+            }
+
+
+            displayButtons();
+
+            //Click event on button with id of "show" executes displaytopicShow function
+            $(document).on("click", "#topic", displaytopicShow);
+
+            //Click event on gifs with class of "topicGiphy" executes pausePlayGifs function
+            $(document).on("click", ".topicGiphy", pausePlayGifs);
+
+            //Function accesses "data-state" attribute and depending on status, changes image source to "data-animate" or "data-still"
+            function pausePlayGifs() {
+                var state = $(this).attr("data-state");
+                if (state === "still") {
+                    $(this).attr("src", $(this).attr("data-animate"));
+                    $(this).attr("data-state", "animate");
+                } else {
+                    $(this).attr("src", $(this).attr("data-still"));
+                    $(this).attr("data-state", "still");
+                }
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>
